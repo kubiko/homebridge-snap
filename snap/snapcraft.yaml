@@ -127,6 +127,8 @@ parts:
             npm install -g --unsafe-perm npm@latest
             # undo workaround to make sure we don't use node from stage
             mv ${SNAPCRAFT_STAGE}/bin/node.snap ${SNAPCRAFT_STAGE}/bin/node
+            # remove all potential .mkdir.js.swp swap file
+            find ${SNAPCRAFT_PART_INSTALL} -name .mkdir.js.swp -exec rm {} \;
         stage:
             - -bin/node
 
