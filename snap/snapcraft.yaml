@@ -102,7 +102,7 @@ parts:
         plugin: nodejs
         after:
           - node
-        node-engine: 8.11.3
+        node-engine: 10.16.3
         node-packages:
             - homebridge
             - homebridge-info
