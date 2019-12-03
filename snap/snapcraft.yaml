@@ -13,6 +13,8 @@ architectures:
     - build-on: i386
     - build-on: amd64
 
+base: core18
+
 # give  hook network access so it can update npm packages if needed
 hooks:
     post-refresh:
