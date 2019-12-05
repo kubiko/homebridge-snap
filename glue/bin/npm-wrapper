@@ -6,6 +6,6 @@ fi
 
 . ${SNAP}/bin/homebridge-read-settings
 
-pushd $SNAP_COMMON 2&> /dev/null
+pushd $SNAP_COMMON > /dev/null
 $SNAP_COMMON/bin/npm "$@"
-popd 2&> /dev/null
+popd > /dev/null
