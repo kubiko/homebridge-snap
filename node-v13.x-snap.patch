@@ -1,0 +1,112 @@
+diff --git a/src/node_credentials.cc b/src/node_credentials.cc
+index ad0e1dbb9b..4e8c2fc07c 100644
+--- a/src/node_credentials.cc
++++ b/src/node_credentials.cc
+@@ -213,9 +213,13 @@ static void SetGid(const FunctionCallbackInfo<Value>& args) {
+   if (gid == gid_not_found) {
+     // Tells JS to throw ERR_INVALID_CREDENTIAL
+     args.GetReturnValue().Set(1);
+-  } else if (setgid(gid)) {
++  } else {
++     // ignore errors
++     setgid(gid);
++/*
+     env->ThrowErrnoException(errno, "setgid");
+   } else {
++*/
+     args.GetReturnValue().Set(0);
+   }
+ }
+@@ -232,9 +236,13 @@ static void SetEGid(const FunctionCallbackInfo<Value>& args) {
+   if (gid == gid_not_found) {
+     // Tells JS to throw ERR_INVALID_CREDENTIAL
+     args.GetReturnValue().Set(1);
+-  } else if (setegid(gid)) {
++  } else {
++     // ignore errors
++     setegid(gid);
++/*
+     env->ThrowErrnoException(errno, "setegid");
+   } else {
++*/
+     args.GetReturnValue().Set(0);
+   }
+ }
+@@ -251,9 +259,13 @@ static void SetUid(const FunctionCallbackInfo<Value>& args) {
+   if (uid == uid_not_found) {
+     // Tells JS to throw ERR_INVALID_CREDENTIAL
+     args.GetReturnValue().Set(1);
+-  } else if (setuid(uid)) {
++  } else {
++     // ignore errors
++     setuid(uid);
++/*
+     env->ThrowErrnoException(errno, "setuid");
+   } else {
++*/
+     args.GetReturnValue().Set(0);
+   }
+ }
+@@ -270,9 +282,13 @@ static void SetEUid(const FunctionCallbackInfo<Value>& args) {
+   if (uid == uid_not_found) {
+     // Tells JS to throw ERR_INVALID_CREDENTIAL
+     args.GetReturnValue().Set(1);
+-  } else if (seteuid(uid)) {
++  } else {
++     // ignore errors
++     seteuid(uid);
++/*
+     env->ThrowErrnoException(errno, "seteuid");
+   } else {
++*/
+     args.GetReturnValue().Set(0);
+   }
+ }
+diff --git a/src/node_file.cc b/src/node_file.cc
+index ddba9ad42c..a8b65de495 100644
+--- a/src/node_file.cc
++++ b/src/node_file.cc
+@@ -1967,14 +1967,17 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+ 
+   FSReqBase* req_wrap_async = GetReqWrap(env, args[3]);
+   if (req_wrap_async != nullptr) {  // chown(path, uid, gid, req)
+-    AsyncCall(env, req_wrap_async, args, "chown", UTF8, AfterNoArgs,
+-              uv_fs_chown, *path, uid, gid);
++    // AsyncCall(env, req_wrap_async, args, "chown", UTF8, AfterNoArgs,
++    //           uv_fs_chown, *path, uid, gid);
++    AsyncCall(env, req_wrap_async, args, "stat", UTF8, AfterNoArgs,
++              uv_fs_stat, *path);
+   } else {  // chown(path, uid, gid, undefined, ctx)
+     CHECK_EQ(argc, 5);
+     FSReqWrapSync req_wrap_sync;
+     FS_SYNC_TRACE_BEGIN(chown);
+-    SyncCall(env, args[4], &req_wrap_sync, "chown",
+-             uv_fs_chown, *path, uid, gid);
++    // SyncCall(env, args[4], &req_wrap_sync, "chown",
++    //          uv_fs_chown, *path, uid, gid);
++    SyncCall(env, args[2], &req_wrap_sync, "stat", uv_fs_stat, *path);
+     FS_SYNC_TRACE_END(chown);
+   }
+ }
+@@ -2000,14 +2003,17 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
+ 
+   FSReqBase* req_wrap_async = GetReqWrap(env, args[3]);
+   if (req_wrap_async != nullptr) {  // fchown(fd, uid, gid, req)
+-    AsyncCall(env, req_wrap_async, args, "fchown", UTF8, AfterNoArgs,
+-              uv_fs_fchown, fd, uid, gid);
++    // AsyncCall(env, req_wrap_async, args, "fchown", UTF8, AfterNoArgs,
++    //           uv_fs_fchown, fd, uid, gid);
++    AsyncCall(env, req_wrap_async, args, "fstat", UTF8, AfterStat,
++              uv_fs_fstat, fd);
+   } else {  // fchown(fd, uid, gid, undefined, ctx)
+     CHECK_EQ(argc, 5);
+     FSReqWrapSync req_wrap_sync;
+     FS_SYNC_TRACE_BEGIN(fchown);
+-    SyncCall(env, args[4], &req_wrap_sync, "fchown",
+-             uv_fs_fchown, fd, uid, gid);
++    // SyncCall(env, args[4], &req_wrap_sync, "fchown",
++    //          uv_fs_fchown, fd, uid, gid);
++    SyncCall(env, args[2], &req_wrap_sync, "fstat", uv_fs_fstat, fd);
+     FS_SYNC_TRACE_END(fchown);
+   }
+ }
