@@ -182,8 +182,9 @@ parts:
             - homebridge
         override-pull: |
             snapcraftctl pull
-            node_version="10.17.0"
-            git checkout v${node_version}
+            # checkout lastest tag of given major version
+            node_version="$(git tag -l | grep "v10." | sort -V | tail -1)"
+            git checkout ${node_version}
             git apply ${SNAPCRAFT_PROJECT_DIR}/node-$(echo ${node_version} | awk -F "." '{print $1}').x-snap.patch
         override-build: |
             ./configure
