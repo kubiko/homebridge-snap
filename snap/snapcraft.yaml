@@ -177,7 +177,7 @@ parts:
         override-pull: |
             snapcraftctl pull
             # checkout lastest tag of given major version
-            node_version="$(git tag -l | grep "v12." | sort -V | tail -1)"
+            node_version="$(git tag -l | grep "v14." | sort -V | tail -1)"
             git checkout ${node_version}
             git apply ${SNAPCRAFT_PROJECT_DIR}/node-$(echo ${node_version} | awk -F "." '{print $1}').x-snap.patch
         override-build: |
