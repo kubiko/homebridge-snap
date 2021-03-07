@@ -59,10 +59,6 @@ apps:
           - ppp
           - log-observe
 
-    show-qr-code:
-        command: bin/show-qr-code
-        adapter: none
-
     npm:
         command: bin/npm-wrapper
         adapter: none
