@@ -1,8 +1,6 @@
 #!/bin/bash
 
-set -x
-exec >> ${SNAP_COMMON}/hook.log 2>&1
-echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
+logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
 # assume snap has always latest
 mkdir -p ${SNAP_COMMON}/lib
@@ -25,6 +23,6 @@ done
 . ${SNAP}/bin/homebridge-read-settings
 if [ "${HOMEBRIDGE_AUTO_UPDATE_NPM_MODULES}" = "on" ]; then
     pushd ${SNAP_COMMON}
-    ${SNAP_COMMON}/bin/npm --prefix ${SNAP_COMMON} -g update
+    logger $(${SNAP_COMMON}/bin/npm --prefix ${SNAP_COMMON} -g update)
     popd
 fi
