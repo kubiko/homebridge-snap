@@ -196,7 +196,8 @@ build-packages:
     - quilt
     - gawk
     - debhelper
-    - python
+    - python3
+    - python3-distutils
     - bison
     - libavahi-compat-libdnssd-dev
     - jq
