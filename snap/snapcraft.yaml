@@ -39,7 +39,7 @@ environment:
 
 apps:
     homebridge:
-        # -U < path where config is store> 
+        # -U < path where config is store>
         command: bin/homebridge-wrapper -U $SNAP_COMMON
         adapter: none
         daemon: simple
@@ -112,8 +112,7 @@ parts:
                 npm@latest \
                 node-gyp@latest \
                 homebridge@latest \
-                homebridge-info@latest \
-                homebridge-server@latest \
+                homebridge-config-ui-x@latest \
             # remove all potential .mkdir.js.swp swap file
             find ${SNAPCRAFT_PART_INSTALL} -name .mkdir.js.swp -exec rm {} \;
         stage:
