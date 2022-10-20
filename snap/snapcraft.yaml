@@ -1,203 +1,164 @@
 name: homebridge
-version: "0"
-version-script: jq -r --arg x version '.[$x]' prime/lib/node_modules/homebridge/package.json
 summary: HomeKit support for the impatient
+adopt-info: homebridge
 description: |
    Homebridge is a lightweight NodeJS server you can run on your home network that emulates the iOS HomeKit API. It supports Plugins, which are community-contributed modules that provide a basic bridge from HomeKit to various 3rd-party APIs provided by manufacturers of "smart home" devices.
 
 confinement: strict
 grade: stable
 architectures:
-    - build-on: armhf
-    - build-on: arm64
-    - build-on: amd64
+  - build-on: armhf
+  - build-on: arm64
+  - build-on: amd64
 
-base: core18
+base: core22
 
 # give  hook network access so it can update npm packages if needed
 hooks:
-    post-refresh:
-        plugs:
-            - network
+  post-refresh:
+      plugs:
+      - network
+
+layout:
+  /usr/include:
+    bind: $SNAP/usr/include
+  /usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a:
+    symlink: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a
 
 environment:
-    npm_config_prefix:           "$SNAP_COMMON"
-    npm_config_unsafe_perm:      "true"
-    npm_config_global:           "true"
-    npm_config_globalignorefile: "$SNAP_COMMON/npmignore"
-    npm_config_globalconfig:     "$SNAP_COMMON/npmrc"
-    npm_config_init_module:      "$SNAP_COMMON/.npm-init.js"
-    npm_config_userconfig:       "$SNAP_COMMON/unpmrc"
-    npm_config_cache:            "$SNAP_COMMON/.npm"
-    PYTHON:                      "/usr/bin/python3"
-    HOME:                        "$SNAP_COMMON"
-    PATH:                        "$SNAP_COMMON/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:$SNAP/usr/lib/git-core"
-    LDFLAGS:                     "--verbose -L${SNAP}/usr/ -L${SNAP}/usr/lib -L${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}/"
-    CFLAGS:                      "-I${SNAP}/usr/include/${SNAPCRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
-    CPPFLAGS:                    "-I${SNAP}/usr/include/${SNAPCRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
-    LD_LIBRARY_PATH:             "$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}"
+  npm_config_prefix:           "$SNAP_COMMON"
+  npm_config_unsafe_perm:      "true"
+  npm_config_global:           "true"
+  npm_config_globalignorefile: "$SNAP_COMMON/npmignore"
+  npm_config_globalconfig:     "$SNAP_COMMON/npmrc"
+  npm_config_init_module:      "$SNAP_COMMON/.npm-init.js"
+  npm_config_userconfig:       "$SNAP_COMMON/unpmrc"
+  npm_config_cache:            "$SNAP_COMMON/.npm"
+  PYTHON:                      "/usr/bin/python3"
+  HOME:                        "$SNAP_COMMON"
+  PATH:                        "$SNAP_COMMON/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:$SNAP/usr/lib/git-core"
+  LDFLAGS:                     "--verbose -L${SNAP}/usr/ -L${SNAP}/usr/lib -L${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}/"
+  CFLAGS:                      "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
+  CPPFLAGS:                    "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
+  LD_LIBRARY_PATH:             "$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${CRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}"
 
 apps:
-    homebridge:
-        # -U < path where config is store>
-        command: bin/homebridge-wrapper -U $SNAP_COMMON
-        adapter: none
-        daemon: simple
-        restart-condition: always
-        plugs:
-          - network-bind
-          - avahi-control
-          - ppp
-          - log-observe
+  homebridge:
+    command-chain:
+      - bin/homebridge-read-settings
+      - bin/homebridge-wrapper
+    command: usr/bin/homebridge
+    daemon: simple
+    install-mode: disable
+    restart-condition: always
+    plugs:
+      - avahi-control
+      - network-bind
+      - log-observe
+      - ppp
+      - serial-port
 
-    manual:
-        command: bin/homebridge-wrapper -U $SNAP_COMMON
-        adapter: none
-        plugs:
-          - network-bind
-          - avahi-control
-          - ppp
-          - log-observe
+  npm:
+    command-chain:
+      - bin/homebridge-read-settings
+    command: bin/npm-wrapper
+    plugs:
+      - network
 
-    npm:
-        command: bin/npm-wrapper
-        adapter: none
-        plugs:
-          - network
+  npm-install:
+    command-chain:
+      - bin/homebridge-read-settings
+    command: bin/npm-wrapper install
+    plugs:
+      - network
 
-    npm-install:
-        command: bin/npm-wrapper install
-        adapter: none
-        plugs:
-          - network
+  list-installed-packages:
+    command-chain:
+      - bin/homebridge-read-settings
+    command: bin/npm-wrapper ls --depth 0
+    plugs:
+      - network
 
-    list-installed-packages:
-        command: bin/npm-wrapper ls --depth 0
-        adapter: none
-        plugs:
-          - network
+  list-outdated-packages:
+    command-chain:
+      - bin/homebridge-read-settings
+    command: bin/npm-wrapper outdated --depth 0
+    plugs:
+      - network
 
-    list-outdated-packages:
-        command: bin/npm-wrapper outdated --depth 0
-        adapter: none
-        plugs:
-          - network
+  update-all-packages:
+    command-chain:
+      - bin/homebridge-read-settings
+    command: bin/npm-update-all
+    plugs:
+      - network
 
-    update-all-packages:
-        command: bin/npm-update-all
-        adapter: none
-        plugs:
-          - network
-
-    help:
-        command: bin/homebridge-help
-        adapter: none
+  help:
+    command: bin/homebridge-help
 
 parts:
-    homebridge:
-        source: npm
-        source-type: local
-        plugin: nodejs
-        nodejs-package-manager: npm
-        stage-packages:
-            - libavahi-compat-libdnssd-dev
-            - rsync
-        override-build: |
-            PATH=$PATH:$PWD/../npm/bin/
-            npm install -g --unsafe-perm --prefix ${SNAPCRAFT_PART_INSTALL}/ install \
-                npm@latest \
-                node-gyp@latest \
-                homebridge@latest \
-                homebridge-config-ui-x@latest \
-            # remove all potential .mkdir.js.swp swap file
-            find ${SNAPCRAFT_PART_INSTALL} -name .mkdir.js.swp -exec rm {} \;
-        stage:
-            - -bin/node
+  homebridge:
+    after:
+      - node
+    plugin: nil
+    override-build: |
+      craftctl default
+      PATH=${CRAFT_STAGE}/usr/bin:${PATH}
+      npm install -g --unsafe-perm --prefix ${CRAFT_PART_INSTALL}/usr install \
+            homebridge@latest \
+            homebridge-config-ui-x@latest \
+      # remove all potential .mkdir.js.swp swap file
+      find ${CRAFT_PART_INSTALL} -name .mkdir.js.swp -exec rm {} \;
+      # set snap version, which is homebridge version and day of build
+      version=$(jq -r ".version" ${CRAFT_PART_INSTALL}/usr/lib/node_modules/homebridge/package.json)
+      craftctl set version=${version}-$(date -Idate)
 
-    glue:
-        plugin: dump
-        source: glue
+  glue:
+    plugin: dump
+    source: glue
+    stage-packages:
+      - build-essential
+      - coreutils
+      - cpp
+      - g++
+      - gcc
+      - gettext-base
+      - git
+      - libavahi-compat-libdnssd-dev
+      - libc6-dev
+      - libcrypt-dev
+      - libstdc++-11-dev
+      - libtirpc-dev
+      - make
+      - rsync
+    stage:
+      - -usr/lib/${CRAFT_ARCH_TRIPLET}/libc_malloc_debug.so
 
-    glibc:
-        plugin: nil
-        source: https://git.launchpad.net/ubuntu/+source/glibc
-        source-tag: ubuntu/bionic
-        source-type: git
-        stage-packages:
-            - make
-            - gcc
-            - g++
-            - g++-7
-            - cpp-7
-            - build-essential
-            - libstdc++-7-dev
-            - git
-            - gettext-base
-            - coreutils
-        override-pull: |
-            snapcraftctl pull
-            rm -rf manual
-            quilt push -afq --leave-rejects --quiltrc=${SNAPCRAFT_PROJECT_DIR}/quiltrc
-            sed -i -e 's|curpass =.*|curpass = "libc"|g' \
-                   -e 's|prefix=/usr|prefix=/snap/'"${SNAPCRAFT_PROJECT_NAME}"'/current/usr|g' \
-                   -e 's|dir=/|dir=/snap/'"${SNAPCRAFT_PROJECT_NAME}"'/current/|g' \
-                   -e 's|build-arch: $(stamp)build_C.UTF-8 |# build-arch: $(stamp)build_C.UTF-8|g' \
-                   -e 's|$(stamp)build_locales-all|# $(stamp)build_locales-all|g' \
-                   -e 's|--prefix=/usr|--prefix=/snap/'"${SNAPCRAFT_PROJECT_NAME}"'/current/usr|g' \
-                   debian/rules
-            sed -i 's|$(CURDIR)/debian/tmp-$(curpass)|'"${SNAPCRAFT_PART_BUILD}"'|g' debian/rules.d/build.mk
-        override-build: |
-            mkdir -p snap/${SNAPCRAFT_PROJECT_NAME}/current/etc
-            cp debian/local/etc/ld.so.conf snap/${SNAPCRAFT_PROJECT_NAME}/current/etc/
-            unset LD_LIBRARY_PATH
-            DEB_BUILD_PROFILES='stage0' DEB_BUILD_OPTIONS='nocheck parallel=$(nproc)' debian/rules build-arch
-            cd build-tree/*-libc
-            make install -j$(nproc)
-            cd ../../
-            cp -rf snap/${SNAPCRAFT_PROJECT_NAME}/current/lib ${SNAPCRAFT_PART_INSTALL}
-            cp -rf snap/${SNAPCRAFT_PROJECT_NAME}/current/sbin ${SNAPCRAFT_PART_INSTALL}
-            cp -rf snap/${SNAPCRAFT_PROJECT_NAME}/current/usr ${SNAPCRAFT_PART_INSTALL}
-            ln -sf gcc ${SNAPCRAFT_PART_INSTALL}/usr/bin/cc
-
-    # dummy part to trigger auto build when glibc updates
-    glibc-dummy:
-        plugin: nil
-        stage-packages:
-             - libc6
-        stage:
-             - -*
-        prime:
-             - -*
-
-    node:
-        source: https://github.com/nodejs/node.git
-        plugin: nil
-        after:
-            - homebridge
-        override-pull: |
-            snapcraftctl pull
-            # checkout lastest tag of given major version
-            node_version="$(git tag -l | grep "v16." | sort -V | tail -1)"
-            git checkout ${node_version}
-            git apply ${SNAPCRAFT_PROJECT_DIR}/node-$(echo ${node_version} | awk -F "." '{print $1}').x-snap.patch
-        override-build: |
-            ./configure
-            make -j$(nproc)
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
-            cp out/Release/node ${SNAPCRAFT_PART_INSTALL}/bin
+  node:
+    source: https://github.com/nodejs/node.git
+    plugin: autotools
+    override-pull: |
+      # checkout lastest tag of given LTS version
+      git_url="https://github.com/nodejs/node.git"
+      major_ver="16"
+      tag=$(git ls-remote --tags --refs  --sort='version:refname' ${git_url} | grep "refs/tags/v${major_ver}." | sort -V | tail -1 | awk -F '/' '{print $3}')
+      git clone ${git_url} --depth=1 --branch ${tag} ${CRAFT_PART_SRC}
+      git apply ${CRAFT_PROJECT_DIR}/node-v${major_ver}.x-snap.patch
+    autotools-configure-parameters:
+      - --prefix=/usr
 
 build-packages:
-    - rdfind
-    - symlinks
-    - systemtap-sdt-dev
-    - libaudit-dev
-    - g++-5
-    - wget
-    - quilt
-    - gawk
-    - debhelper
-    - python3
-    - python3-distutils
-    - bison
-    - libavahi-compat-libdnssd-dev
-    - jq
+  - rdfind
+  - symlinks
+  - systemtap-sdt-dev
+  - libaudit-dev
+  - g++
+  - wget
+  - quilt
+  - gawk
+  - debhelper
+  - python3
+  - python3-distutils
+  - bison
+  - libavahi-compat-libdnssd-dev
+  - jq
