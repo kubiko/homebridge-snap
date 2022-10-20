@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # call update on all packages
 npm-wrapper update

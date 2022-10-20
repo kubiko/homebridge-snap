@@ -2,7 +2,7 @@
 
 # read HOMEbridge config
 
-source $SNAP/bin/config
+source ${SNAP}/bin/config
 
 for key in ${keys[@]}
 do
@@ -18,3 +18,5 @@ do
         export $key=$value
     fi
 done
+
+exec "$@"
