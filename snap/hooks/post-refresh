@@ -2,27 +2,21 @@
 
 logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# assume snap has always latest
-mkdir -p ${SNAP_COMMON}/lib
-ARCH_TRIPLET="$($SNAP//usr/bin/gcc -dumpmachine)"
-[ -e ${SNAP}/lib/${ARCH_TRIPLET} ] && cp -r ${SNAP}/lib/${ARCH_TRIPLET} ${SNAP_COMMON}/lib
-
+# do cleanup from the previous installs when homebridge* modules were copied to the SNAP_COMMON
 LIB_NODE="lib/node_modules"
-LIB_NODE_HOMEBRIDGE="${LIB_NODE}/homebridge"
-for dir in ${LIB_NODE_HOMEBRIDGE} ${LIB_NODE_HOMEBRIDGE}-info ${LIB_NODE_HOMEBRIDGE}-server ${LIB_NODE}/npm ${LIB_NODE}/node-gyp
+for d in homebridge homebridge-config-ui-x homebridge-info homebridge-server npm node-gyp
 do
-    [ -e ${SNAP}/${dir} ] && ${SNAP}/usr/bin/rsync -rltp --delete-after ${SNAP}/${dir} ${SNAP_COMMON}/${LIB_NODE}
+  [ -e "${SNAP_COMMON}/${LIB_NODE}/${d}" ] && rm -rf ${SNAP_COMMON}/${LIB_NODE}/${d}
 done
 
- mkdir -p ${SNAP_COMMON}/bin
-[ -e ${SNAP}/bin/homebridge ] && cp -R ${SNAP}/bin/homebridge ${SNAP_COMMON}/bin
-[ -e ${SNAP}/bin/node-gyp ] && cp -R ${SNAP}/bin/node-gyp ${SNAP_COMMON}/bin
-[ -e ${SNAP}/bin/npm ] && cp -R ${SNAP}/bin/npm ${SNAP_COMMON}/bin
+for b in homebridge homebridge-config-ui-x hb-service node-gyp npm npx
+do
+  [ -L "${SNAP_COMMON}/bin/${b}" ] && rm -f ${SNAP_COMMON}/bin/${b}
+done
 
-
+# check if we should auto update installed modules
 . ${SNAP}/bin/homebridge-read-settings
 if [ "${HOMEBRIDGE_AUTO_UPDATE_NPM_MODULES}" = "on" ]; then
-    pushd ${SNAP_COMMON}
-    logger $(${SNAP_COMMON}/bin/npm --prefix ${SNAP_COMMON} -g update)
-    popd
+  cd ${SNAP_COMMON}
+  logger $(${SNAP}/usr/bin/npm --prefix ${SNAP_COMMON} -g update)
 fi

@@ -2,10 +2,9 @@
 
 logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# handle install, default config + npm config files
-[ ! -e $SNAP_COMMON/config.json ] && [ -e $SNAP/config-sample.json ] && cp $SNAP/config-sample.json $SNAP_COMMON/config.json
-[ ! -e $SNAP_COMMON/npmrc ] && [ -e $SNAP/npmrc ] &&  cp $SNAP/npmrc $SNAP_COMMON
-[ ! -e $SNAP_COMMON/.npmrc ] && [ -e $SNAP/.npmrc ] && cp $SNAP/.npmrc $SNAP_COMMON
+# create basic dir structure
+mkdir -p ${SNAP_COMMON}/bin ${SNAP_COMMON}/lib/node_modules
 
-# call post-refresh to install npm modules from snap
-$SNAP/meta/hooks/post-refresh
+# handle install, default config + npm config files
+[ ! -e ${SNAP_COMMON}/config.json ] && [ -e ${SNAP}/config-default.json ] && cp ${SNAP}/config-default.json ${SNAP_COMMON}/config.json
+[ ! -e ${SNAP_COMMON}/npmrc ] && echo -e "prefix=${SNAP_COMMON}" > ${SNAP_COMMON}/npmrc
