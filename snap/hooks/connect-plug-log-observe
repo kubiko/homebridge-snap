@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Check if other required interfaces are connected, then start snap services
+# required interfaces avahi-control, ppp, log-observe(this callback)
+if snapctl is-connected avahi-control; then
+  if snapctl is-connected ppp; then
+    snapctl start --enable  homebridge
+  fi
+fi
