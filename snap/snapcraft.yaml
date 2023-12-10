@@ -26,17 +26,10 @@ layout:
     symlink: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a
 
 environment:
-  npm_config_prefix:           "$SNAP_COMMON"
-  npm_config_unsafe_perm:      "true"
-  npm_config_global:           "true"
-  npm_config_globalignorefile: "$SNAP_COMMON/npmignore"
-  npm_config_globalconfig:     "$SNAP_COMMON/npmrc"
-  npm_config_init_module:      "$SNAP_COMMON/.npm-init.js"
-  npm_config_userconfig:       "$SNAP_COMMON/unpmrc"
-  npm_config_cache:            "$SNAP_COMMON/.npm"
+  npm_config_prefix:           "$SNAP/opt/homebridge"
   PYTHON:                      "/usr/bin/python3"
   HOME:                        "$SNAP_COMMON"
-  PATH:                        "$SNAP_COMMON/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:$SNAP/usr/lib/git-core"
+  PATH:                        "$SNAP/opt/homebridge/bin:$SNAP_COMMON/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:$SNAP/usr/lib/git-core"
   LDFLAGS:                     "--verbose -L${SNAP}/usr/ -L${SNAP}/usr/lib -L${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}/"
   CFLAGS:                      "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
   CPPFLAGS:                    "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
