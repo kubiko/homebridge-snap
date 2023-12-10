@@ -1,10 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
-
-# create basic dir structure
-mkdir -p ${SNAP_COMMON}/bin ${SNAP_COMMON}/lib/node_modules
-
-# handle install, default config + npm config files
-[ ! -e ${SNAP_COMMON}/config.json ] && [ -e ${SNAP}/config-default.json ] && cp ${SNAP}/config-default.json ${SNAP_COMMON}/config.json
-[ ! -e ${SNAP_COMMON}/npmrc ] && echo -e "prefix=${SNAP_COMMON}" > ${SNAP_COMMON}/npmrc
+cp -r ${SNAP}/var/lib/homebridge/* ${SNAP_COMMON}

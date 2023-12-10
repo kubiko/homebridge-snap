@@ -2,21 +2,29 @@
 
 logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# do cleanup from the previous installs when homebridge* modules were copied to the SNAP_COMMON
-LIB_NODE="lib/node_modules"
-for d in homebridge homebridge-config-ui-x homebridge-info homebridge-server npm node-gyp
-do
-  [ -e "${SNAP_COMMON}/${LIB_NODE}/${d}" ] && rm -rf ${SNAP_COMMON}/${LIB_NODE}/${d}
-done
+# migrate old install paths to the new ones
+if [ -d ${SNAP_COMMON}/lib ]; then
+  # do cleanup from the previous installs when homebridge* modules were copied to the SNAP_COMMON
+  LIB_NODE="lib/node_modules"
+  for d in homebridge homebridge-config-ui-x homebridge-info homebridge-server npm node-gyp
+  do
+    [ -e "${SNAP_COMMON}/${LIB_NODE}/${d}" ] && rm -rf ${SNAP_COMMON}/${LIB_NODE}/${d}
+  done
 
-for b in homebridge homebridge-config-ui-x hb-service node-gyp npm npx
-do
-  [ -L "${SNAP_COMMON}/bin/${b}" ] && rm -f ${SNAP_COMMON}/bin/${b}
-done
+  for b in homebridge homebridge-config-ui-x hb-service node-gyp npm npx
+  do
+    [ -L "${SNAP_COMMON}/bin/${b}" ] && rm -f ${SNAP_COMMON}/bin/${b}
+  done
+  mv ${SNAP_COMMON}/${LIB_NODE} ${SNAP_COMMON}/
+  rm -rf ${SNAP_COMMON}/lib ${SNAP_COMMON}/bin ${SNAP_COMMON}/npmrc
+fi
+
+# refresh homebridge from snap package
+cp -r ${SNAP}/var/lib/homebridge/* ${SNAP_COMMON}
 
 # check if we should auto update installed modules
 . ${SNAP}/bin/homebridge-read-settings
 if [ "${HOMEBRIDGE_AUTO_UPDATE_NPM_MODULES}" = "on" ]; then
   cd ${SNAP_COMMON}
-  logger $(${SNAP}/usr/bin/npm --prefix ${SNAP_COMMON} -g update)
+  logger $(${SNAP}/opt/homebridge/bin/npm  update)
 fi
