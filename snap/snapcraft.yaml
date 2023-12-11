@@ -91,20 +91,36 @@ apps:
 
 parts:
   homebridge:
-    after:
-      - node
     plugin: nil
+    stage-packages:
+      - homebridge
     override-build: |
       craftctl default
-      PATH=${CRAFT_STAGE}/usr/bin:${PATH}
-      npm install -g --unsafe-perm --prefix ${CRAFT_PART_INSTALL}/usr install \
-            homebridge@latest \
-            homebridge-config-ui-x@latest \
-      # remove all potential .mkdir.js.swp swap file
-      find ${CRAFT_PART_INSTALL} -name .mkdir.js.swp -exec rm {} \;
-      # set snap version, which is homebridge version and day of build
-      version=$(jq -r ".version" ${CRAFT_PART_INSTALL}/usr/lib/node_modules/homebridge/package.json)
+      # fix paths  in helpers
+      sed -i \
+          -e 's|/opt/homebridge|${SNAP}/opt/homebridge|g' \
+          -e 's|/var/lib/homebridge|${SNAP_COMMON}|g' \
+          -e 's|systemctl \(.*\) homebridge.service|snapctl \1 ${SNAP_INSTANCE_NAME}.homebridge|g' \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/bashrc \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/start.sh \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/source.sh \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/hb-service-shim \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/bashrc-hb-shell \
+          ${CRAFT_PART_INSTALL}/opt/homebridge/hb-shell
+
+      version=$(sed -n 's/[[:space:]]\+- homebridge=\(.*\)/\1/p' ${CRAFT_PART_BUILD}/..//state/pull)
       craftctl set version=${version}-$(date -Idate)
+    stage:
+      - -opt/homebridge/bin/corepack
+      - -opt/homebridge/bin/node
+      - -opt/homebridge/bin/npm
+      - -opt/homebridge/bin/npx
+      - -opt/homebridge/include
+      - -opt/homebridge/lib/node_modules/corepack
+      - -opt/homebridge/lib/node_modules/npm
+      - -opt/homebridge/share/doc/node
+      - -opt/homebridge/share/man/man1/node.1
+      - -opt/homebridge/share/share/systemtap/tapset/node.stp
 
   glue:
     plugin: dump
@@ -139,6 +155,13 @@ parts:
       git apply ${CRAFT_PROJECT_DIR}/node-v${major_ver}.x-snap.patch
     autotools-configure-parameters:
       - --prefix=/usr
+
+package-repositories:
+  - type: apt
+    components: [main]
+    suites: [stable]
+    key-id: ACAA60814A7524504F07DE07DF5B0FE88C8F5D92
+    url: https://repo.homebridge.io
 
 build-packages:
   - rdfind
