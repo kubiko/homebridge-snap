@@ -51,6 +51,15 @@ apps:
       - ppp
       - serial-port
 
+  hb-shell:
+    command: bin/hb-shell.sh
+    plugs:
+      - avahi-control
+      - network-bind
+      - log-observe
+      - ppp
+      - serial-port
+
   npm:
     command-chain:
       - bin/homebridge-read-settings
