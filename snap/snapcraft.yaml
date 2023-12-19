@@ -24,6 +24,8 @@ layout:
     bind: $SNAP/usr/include
   /usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a:
     symlink: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a
+  /usr/lib/${CRAFT_ARCH_TRIPLET}/perl:
+    bind: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/perl
 
 environment:
   npm_config_prefix:           "$SNAP/opt/homebridge"
