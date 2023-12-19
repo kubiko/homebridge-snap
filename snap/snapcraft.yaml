@@ -40,9 +40,8 @@ apps:
     command-chain:
       - bin/homebridge-read-settings
       - bin/homebridge-wrapper
-    command: usr/bin/homebridge
+    command: opt/homebridge/start.sh --allow-root
     daemon: simple
-    install-mode: disable
     restart-condition: always
     plugs:
       - avahi-control
