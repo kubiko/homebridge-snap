@@ -149,6 +149,8 @@ parts:
   node:
     source: https://github.com/nodejs/node.git
     plugin: autotools
+    build-environment:
+      - PATH: "/usr/lib/ccache:${PATH}"
     override-pull: |
       # checkout lastest tag of given LTS version
       git_url="https://github.com/nodejs/node.git"
@@ -157,7 +159,7 @@ parts:
       git clone ${git_url} --depth=1 --branch ${tag} ${CRAFT_PART_SRC}
       git apply ${CRAFT_PROJECT_DIR}/node-v${major_ver}.x-snap.patch
     autotools-configure-parameters:
-      - --prefix=/usr
+      - --prefix=/opt/homebridge
 
 package-repositories:
   - type: apt
