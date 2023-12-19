@@ -128,17 +128,10 @@ parts:
     stage-packages:
       - build-essential
       - coreutils
-      - cpp
-      - g++
-      - gcc
+      - curl
       - gettext-base
       - git
       - libavahi-compat-libdnssd-dev
-      - libc6-dev
-      - libcrypt-dev
-      - libstdc++-11-dev
-      - libtirpc-dev
-      - make
       - rsync
     stage:
       - -usr/lib/${CRAFT_ARCH_TRIPLET}/libc_malloc_debug.so
