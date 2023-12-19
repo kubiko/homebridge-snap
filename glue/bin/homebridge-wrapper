@@ -1,2 +1,2 @@
 #!/bin/sh
-"$@" --user-storage-path ${SNAP_COMMON} --plugin-path ${SNAP_COMMON}/lib/node_modules ${HOMEBRIDGE_OPTS}
+"$@" ${HOMEBRIDGE_OPTS}
