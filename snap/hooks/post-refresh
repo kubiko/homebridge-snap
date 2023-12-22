@@ -4,15 +4,31 @@ logger "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
 # cleanup as migration to the new releases
 if [ -d ${SNAP_COMMON}/lib ]; then
+  # transition from global to local install
+  installed_modules=$(npm list --global --prefix ${SNAP_COMMON} --json | jq -r '.dependencies | keys | .[]')
+  cp ${SNAP}/var/lib/homebridge/package.json ${SNAP_COMMON}
+  cp -r ${SNAP}/var/lib/homebridge/node_modules ${SNAP_COMMON}
+  cd ${SNAP_COMMON/}
+  for m in ${installed_modules}
+  do
+    npm install ${m}
+  done
+  # remove old global install
   rm -rf ${SNAP_COMMON}/lib ${SNAP_COMMON}/bin ${SNAP_COMMON}/npmrc
+else
+  # refresh homebridge from snap package
+  cp -r ${SNAP}/var/lib/homebridge/node_modules/* ${SNAP_COMMON}/node_modules/
+  # update package list by merging jsons
+  jq -s '.[0] * .[1]'  \
+        ${SNAP_COMMON}/package.json \
+        $SNAP/var/lib/homebridge/package.json \
+        > ${SNAP_COMMON}/package.json.new
+  mv ${SNAP_COMMON}/package.json.new ${SNAP_COMMON}/package.json
 fi
-
-# refresh homebridge from snap package
-cp -r ${SNAP}/var/lib/homebridge/${NODE_MODULES}/* ${SNAP_COMMON}/${NODE_MODULES}
 
 # check if we should auto update installed modules
 . ${SNAP}/bin/homebridge-read-settings
 if [ "${HOMEBRIDGE_AUTO_UPDATE_NPM_MODULES}" = "on" ]; then
   cd ${SNAP_COMMON}
-  logger $(${SNAP}/opt/homebridge/bin/npm  update)
+  ${SNAP}/opt/homebridge/bin/npm  update 2>&1 | logger
 fi
