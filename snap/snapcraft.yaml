@@ -156,7 +156,7 @@ parts:
       git_url="https://github.com/nodejs/node.git"
       major_ver="18"
       tag_version="v${major_ver}.18"
-      tag=$(git ls-remote --tags --refs  --sort='version:refname' ${git_url} | grep "refs/tags/${tag_version}" | tail -1 | awk -F '/' '{print $3}')
+      tag=$(git ls-remote --tags --refs  --sort='version:refname' "${git_url}" "refs/tags/${tag_version}*" | tail -1 | awk -F '/' '{print $3}')
       git clone ${git_url} --depth=1 --branch ${tag} ${CRAFT_PART_SRC}
       git apply ${CRAFT_PROJECT_DIR}/node-v${major_ver}.x-snap.patch
     autotools-configure-parameters:
