@@ -161,6 +161,8 @@ parts:
       git apply ${CRAFT_PROJECT_DIR}/node-v${major_ver}.x-snap.patch
     autotools-configure-parameters:
       - --prefix=/opt/homebridge
+    prime:
+      - -opt/homebridge/include
 
 package-repositories:
   - type: apt
