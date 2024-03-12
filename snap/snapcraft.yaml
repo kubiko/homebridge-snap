@@ -48,6 +48,8 @@ apps:
     plugs:
       - avahi-control
       - network-bind
+      - network-observe
+      - network-setup-observe
       - log-observe
       - ppp
       - serial-port
