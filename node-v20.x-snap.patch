@@ -1,4 +1,4 @@
-From 9458bf27bb72907a71dbaaabde957430268d3848 Mon Sep 17 00:00:00 2001
+From 7b735f1bca63cee550630b51f97969117826376c Mon Sep 17 00:00:00 2001
 From: Ondrej Kubik <ondrej.kubik@canonical.com>
 Date: Fri, 6 Jan 2023 01:07:28 +0000
 Subject: [PATCH] patches to support snap strict confinement
@@ -9,14 +9,14 @@ which is not permitted in the strict confinement.
 Signed-off-by: Ondrej Kubik <ondrej.kubik@canonical.com>
 ---
  src/node_credentials.cc | 28 ++++++++++++++++++++++++----
- src/node_file.cc        | 20 +++++++++++++-------
- 2 files changed, 37 insertions(+), 11 deletions(-)
+ src/node_file.cc        | 18 ++++++++++++------
+ 2 files changed, 36 insertions(+), 10 deletions(-)
 
 diff --git a/src/node_credentials.cc b/src/node_credentials.cc
-index 8a832b0e3e..efbff93b52 100644
+index 80605c9201..5bb7391307 100644
 --- a/src/node_credentials.cc
 +++ b/src/node_credentials.cc
-@@ -47,6 +47,10 @@ bool linux_at_secure() {
+@@ -46,6 +46,10 @@ bool linux_at_secure() {
  
  namespace credentials {
  
@@ -26,8 +26,8 @@ index 8a832b0e3e..efbff93b52 100644
 +
  #if defined(__linux__)
  // Returns true if the current process only has the passed-in capability.
- bool HasOnly(int capability) {
-@@ -272,9 +276,13 @@ static void SetGid(const FunctionCallbackInfo<Value>& args) {
+ static bool HasOnly(int capability) {
+@@ -281,9 +285,13 @@ static void SetGid(const FunctionCallbackInfo<Value>& args) {
    if (gid == gid_not_found) {
      // Tells JS to throw ERR_INVALID_CREDENTIAL
      args.GetReturnValue().Set(1);
@@ -42,7 +42,7 @@ index 8a832b0e3e..efbff93b52 100644
      args.GetReturnValue().Set(0);
    }
  }
-@@ -291,9 +299,13 @@ static void SetEGid(const FunctionCallbackInfo<Value>& args) {
+@@ -302,9 +310,13 @@ static void SetEGid(const FunctionCallbackInfo<Value>& args) {
    if (gid == gid_not_found) {
      // Tells JS to throw ERR_INVALID_CREDENTIAL
      args.GetReturnValue().Set(1);
@@ -57,7 +57,7 @@ index 8a832b0e3e..efbff93b52 100644
      args.GetReturnValue().Set(0);
    }
  }
-@@ -310,9 +322,13 @@ static void SetUid(const FunctionCallbackInfo<Value>& args) {
+@@ -323,9 +335,13 @@ static void SetUid(const FunctionCallbackInfo<Value>& args) {
    if (uid == uid_not_found) {
      // Tells JS to throw ERR_INVALID_CREDENTIAL
      args.GetReturnValue().Set(1);
@@ -72,7 +72,7 @@ index 8a832b0e3e..efbff93b52 100644
      args.GetReturnValue().Set(0);
    }
  }
-@@ -329,9 +345,13 @@ static void SetEUid(const FunctionCallbackInfo<Value>& args) {
+@@ -344,9 +360,13 @@ static void SetEUid(const FunctionCallbackInfo<Value>& args) {
    if (uid == uid_not_found) {
      // Tells JS to throw ERR_INVALID_CREDENTIAL
      args.GetReturnValue().Set(1);
@@ -88,11 +88,11 @@ index 8a832b0e3e..efbff93b52 100644
    }
  }
 diff --git a/src/node_file.cc b/src/node_file.cc
-index 078c075e8e..200b5af8c3 100644
+index b0aa53420c..c1ef5cdda1 100644
 --- a/src/node_file.cc
 +++ b/src/node_file.cc
-@@ -2592,12 +2592,15 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
-     FSReqBase* req_wrap_async = GetReqWrap(args, 3);
+@@ -2785,8 +2785,10 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+         path.ToStringView());
      FS_ASYNC_TRACE_BEGIN1(
          UV_FS_CHOWN, req_wrap_async, "path", TRACE_STR_COPY(*path))
 -    AsyncCall(env, req_wrap_async, args, "chown", UTF8, AfterNoArgs,
@@ -102,6 +102,10 @@ index 078c075e8e..200b5af8c3 100644
 +    AsyncCall(env, req_wrap_async, args, "stat", UTF8, AfterNoArgs,
 +             uv_fs_stat, *path);
    } else {  // chown(path, uid, gid)
+     THROW_IF_INSUFFICIENT_PERMISSIONS(
+         env,
+@@ -2794,7 +2796,8 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+         path.ToStringView());
      FSReqWrapSync req_wrap_sync("chown", *path);
      FS_SYNC_TRACE_BEGIN(chown);
 -    SyncCallAndThrowOnError(env, &req_wrap_sync, uv_fs_chown, *path, uid, gid);
@@ -110,9 +114,9 @@ index 078c075e8e..200b5af8c3 100644
      FS_SYNC_TRACE_END(chown);
    }
  }
-@@ -2624,14 +2627,17 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
-   FSReqBase* req_wrap_async = GetReqWrap(args, 3);
-   if (req_wrap_async != nullptr) {  // fchown(fd, uid, gid, req)
+@@ -2823,12 +2826,15 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
+   if (argc > 3) {  // fchown(fd, uid, gid, req)
+     FSReqBase* req_wrap_async = GetReqWrap(args, 3);
      FS_ASYNC_TRACE_BEGIN0(UV_FS_FCHOWN, req_wrap_async)
 -    AsyncCall(env, req_wrap_async, args, "fchown", UTF8, AfterNoArgs,
 -              uv_fs_fchown, fd, uid, gid);
@@ -120,18 +124,15 @@ index 078c075e8e..200b5af8c3 100644
 +    //           uv_fs_fchown, fd, uid, gid);
 +    AsyncCall(env, req_wrap_async, args, "fstat", UTF8, AfterStat,
 +              uv_fs_fstat, fd);
-   } else {  // fchown(fd, uid, gid, undefined, ctx)
-     CHECK_EQ(argc, 5);
-     FSReqWrapSync req_wrap_sync;
+   } else {  // fchown(fd, uid, gid)
+     FSReqWrapSync req_wrap_sync("fchown");
      FS_SYNC_TRACE_BEGIN(fchown);
--    SyncCall(env, args[4], &req_wrap_sync, "fchown",
--             uv_fs_fchown, fd, uid, gid);
-+    // SyncCall(env, args[4], &req_wrap_sync, "fchown",
-+    //          uv_fs_fchown, fd, uid, gid);
+-    SyncCallAndThrowOnError(env, &req_wrap_sync, uv_fs_fchown, fd, uid, gid);
++    // SyncCallAndThrowOnError(env, &req_wrap_sync, uv_fs_fchown, fd, uid, gid);
 +    SyncCall(env, args[2], &req_wrap_sync, "fstat", uv_fs_fstat, fd);
      FS_SYNC_TRACE_END(fchown);
    }
  }
 -- 
-2.42.1
+2.44.0
 
