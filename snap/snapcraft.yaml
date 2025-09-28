@@ -6,12 +6,12 @@ description: |
 
 confinement: strict
 grade: stable
-architectures:
-  - build-on: armhf
-  - build-on: arm64
-  - build-on: amd64
+platforms:
+    armhf:
+    arm64:
+    amd64:
 
-base: core22
+base: core24
 
 # give  hook network access so it can update npm packages if needed
 hooks:
@@ -22,20 +22,20 @@ hooks:
 layout:
   /usr/include:
     bind: $SNAP/usr/include
-  /usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a:
-    symlink: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/libc_nonshared.a
-  /usr/lib/${CRAFT_ARCH_TRIPLET}/perl:
-    bind: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}/perl
+  /usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libc_nonshared.a:
+    symlink: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libc_nonshared.a
+  /usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/perl:
+    bind: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/perl
 
 environment:
   npm_config_prefix:           "$SNAP/opt/homebridge"
   PYTHON:                      "/usr/bin/python3"
   HOME:                        "$SNAP_COMMON"
   PATH:                        "$SNAP/opt/homebridge/bin:$SNAP_COMMON/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:$SNAP/usr/lib/git-core"
-  LDFLAGS:                     "--verbose -L${SNAP}/usr/ -L${SNAP}/usr/lib -L${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}/"
-  CFLAGS:                      "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
-  CPPFLAGS:                    "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET} -I${SNAP}/usr/include"
-  LD_LIBRARY_PATH:             "$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${CRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}"
+  LDFLAGS:                     "--verbose -L${SNAP}/usr/ -L${SNAP}/usr/lib -L${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/"
+  CFLAGS:                      "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET_BUILD_FOR} -I${SNAP}/usr/include"
+  CPPFLAGS:                    "-I${SNAP}/usr/include/${CRAFT_ARCH_TRIPLET_BUILD_FOR} -I${SNAP}/usr/include"
+  LD_LIBRARY_PATH:             "$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:$SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
 
 apps:
   homebridge:
@@ -148,7 +148,7 @@ parts:
       - libavahi-compat-libdnssd-dev
       - rsync
     stage:
-      - -usr/lib/${CRAFT_ARCH_TRIPLET}/libc_malloc_debug.so
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libc_malloc_debug.so
 
   node:
     source: https://github.com/nodejs/node.git
@@ -159,6 +159,10 @@ parts:
       # checkout lastest tag of given LTS version
       git_url="https://github.com/nodejs/node.git"
       major_ver="24"
+      # use 22 for armhf as 24 fails to build
+      if [ "${CRAFT_ARCH_BUILD_FOR}" = "armhf" ]; then
+        major_ver="22"
+      fi
       tag_version="v${major_ver}"
       tag=$(git ls-remote --tags --refs  --sort='version:refname' "${git_url}" "refs/tags/${tag_version}*" | tail -1 | awk -F '/' '{print $3}')
       git clone ${git_url} --depth=1 --branch ${tag} ${CRAFT_PART_SRC}
@@ -186,7 +190,7 @@ build-packages:
   - gawk
   - debhelper
   - python3
-  - python3-distutils
+  - python3-distutils-extra
   - bison
   - libavahi-compat-libdnssd-dev
   - jq
