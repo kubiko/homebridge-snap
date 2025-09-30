@@ -54,6 +54,7 @@ apps:
       - log-observe
       - ppp
       - serial-port
+      - system-observe
 
   hb-shell:
     command: bin/hb-shell.sh
@@ -66,6 +67,7 @@ apps:
       - log-observe
       - ppp
       - serial-port
+      - system-observe
 
   npm:
     command-chain:
