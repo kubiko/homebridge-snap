@@ -1,4 +1,4 @@
-From e6c42629a515660d0d0d3aca82b7564da753902c Mon Sep 17 00:00:00 2001
+From bc83037c8d15ec98612376f7c8f8206425dc56aa Mon Sep 17 00:00:00 2001
 From: Ondrej Kubik <ondrej.kubik@canonical.com>
 Date: Fri, 6 Jan 2023 01:07:28 +0000
 Subject: [PATCH] patches to support snap strict confinement
@@ -13,7 +13,7 @@ Signed-off-by: Ondrej Kubik <ondrej.kubik@canonical.com>
  2 files changed, 36 insertions(+), 10 deletions(-)
 
 diff --git a/src/node_credentials.cc b/src/node_credentials.cc
-index 0c7978a4843..617cd169baf 100644
+index d1f7c6e2a80..aa5b65ada27 100644
 --- a/src/node_credentials.cc
 +++ b/src/node_credentials.cc
 @@ -45,6 +45,10 @@ bool linux_at_secure() {
@@ -88,23 +88,30 @@ index 0c7978a4843..617cd169baf 100644
    }
  }
 diff --git a/src/node_file.cc b/src/node_file.cc
-index cbd2dcbfd21..a581ebfddcd 100644
+index 126913185e0..9708368cd87 100644
 --- a/src/node_file.cc
 +++ b/src/node_file.cc
-@@ -2889,8 +2889,10 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+@@ -3114,7 +3114,7 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
          path.ToStringView());
      FS_ASYNC_TRACE_BEGIN1(
          UV_FS_CHOWN, req_wrap_async, "path", TRACE_STR_COPY(*path))
--    AsyncCall(env, req_wrap_async, args, "chown", UTF8, AfterNoArgs,
--              uv_fs_chown, *path, uid, gid);
-+    // AsyncCall(env, req_wrap_async, args, "chown", UTF8, AfterNoArgs,
-+    //          uv_fs_chown, *path, uid, gid);
+-    AsyncCall(env,
++/*    AsyncCall(env,
+               req_wrap_async,
+               args,
+               "chown",
+@@ -3123,7 +3123,9 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+               uv_fs_chown,
+               *path,
+               uid,
+-              gid);
++              gid); */
 +    AsyncCall(env, req_wrap_async, args, "stat", UTF8, AfterNoArgs,
 +             uv_fs_stat, *path);
    } else {  // chown(path, uid, gid)
      THROW_IF_INSUFFICIENT_PERMISSIONS(
          env,
-@@ -2898,7 +2900,8 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
+@@ -3131,7 +3133,8 @@ static void Chown(const FunctionCallbackInfo<Value>& args) {
          path.ToStringView());
      FSReqWrapSync req_wrap_sync("chown", *path);
      FS_SYNC_TRACE_BEGIN(chown);
@@ -114,14 +121,21 @@ index cbd2dcbfd21..a581ebfddcd 100644
      FS_SYNC_TRACE_END(chown);
    }
  }
-@@ -2928,12 +2931,15 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
+@@ -3160,7 +3163,7 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
      FSReqBase* req_wrap_async = GetReqWrap(args, 3);
      CHECK_NOT_NULL(req_wrap_async);
      FS_ASYNC_TRACE_BEGIN0(UV_FS_FCHOWN, req_wrap_async)
--    AsyncCall(env, req_wrap_async, args, "fchown", UTF8, AfterNoArgs,
--              uv_fs_fchown, fd, uid, gid);
-+    // AsyncCall(env, req_wrap_async, args, "fchown", UTF8, AfterNoArgs,
-+    //           uv_fs_fchown, fd, uid, gid);
+-    AsyncCall(env,
++/*    AsyncCall(env,
+               req_wrap_async,
+               args,
+               "fchown",
+@@ -3169,11 +3172,14 @@ static void FChown(const FunctionCallbackInfo<Value>& args) {
+               uv_fs_fchown,
+               fd,
+               uid,
+-              gid);
++              gid); */
 +    AsyncCall(env, req_wrap_async, args, "fstat", UTF8, AfterStat,
 +              uv_fs_fstat, fd);
    } else {  // fchown(fd, uid, gid)
@@ -134,5 +148,5 @@ index cbd2dcbfd21..a581ebfddcd 100644
    }
  }
 -- 
-2.51.0
+2.53.0
 
